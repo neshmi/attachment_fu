@@ -3,14 +3,13 @@ module RedArtisan
     module Filters
       module Scale
         
-        def resize(width, height)
+        def resize(width, height, size = nil)
           create_core_image_context(width, height)
 
           scale_x, scale_y = scale(width, height)
-
           @original.affine_clamp :inputTransform => OSX::NSAffineTransform.transform do |clamped|
             clamped.lanczos_scale_transform :inputScale => scale_x > scale_y ? scale_x : scale_y, :inputAspectRatio => scale_x / scale_y do |scaled|
-              scaled.crop :inputRectangle => vector(0, 0, width, height) do |cropped|
+              scaled.crop :inputRectangle => vector( (size ? ((width - size) / 2) : 0), 0, (size ? size : width), (size ? size : height)) do |cropped|
                 @target = cropped
               end
             end
@@ -30,8 +29,8 @@ module RedArtisan
 
         def fit(size)
           original_size = @original.extent.size
-          scale = size.to_f / (original_size.width > original_size.height ? original_size.width : original_size.height)
-          resize (original_size.width * scale).to_i, (original_size.height * scale).to_i
+          scale = size.to_f / (original_size.width > original_size.height ? original_size.height : original_size.width)
+          resize (original_size.width * scale).to_i, (original_size.height * scale).to_i, size
         end
         
         private
